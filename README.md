@@ -22,9 +22,13 @@
 
 # 🔎 GPT Researcher
 
-For a metadata-only IEEE Xplore and Springer Nature paper list, see
-[Retrieval-only paper search](PAPER_SEARCH.md). This command does not start the
-research or report-generation workflow.
+To include IEEE Xplore, Springer Nature, and ScienceDirect in the existing
+research search fan-out, set `RETRIEVER=tavily,ieee,springer,sciencedirect`
+and the corresponding API keys in your local `.env` file. See `.env.example`.
+The existing `semantic_scholar` retriever can be included in the same list.
+This setting adds sources to GPT Researcher's normal research pipeline; it
+does not turn the pipeline into a list-only search command. Its existing Jev
+context filter remains controlled by `TYPESAFE_API_KEY`.
 
 **GPT Researcher the first open deep research agent designed for both web and local research on any given task.** 
 

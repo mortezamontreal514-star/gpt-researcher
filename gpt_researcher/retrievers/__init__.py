@@ -19,6 +19,9 @@ from .mcp import MCPRetriever
 from .bocha.bocha import BoChaSearch
 from .xquik.xquik import XquikSearch
 from .openalex.openalex import OpenAlexSearch
+from .ieee.ieee import IEEESearch
+from .springer.springer import SpringerSearch
+from .sciencedirect.sciencedirect import ScienceDirectSearch
 
 __all__ = [
     "TavilySearch",
@@ -41,5 +44,8 @@ __all__ = [
     "MCPRetriever",
     "BoChaSearch",
     "XquikSearch",
-    "OpenAlexSearch"
+    "OpenAlexSearch",
+    "IEEESearch",
+    "SpringerSearch",
+    "ScienceDirectSearch",
 ]

@@ -80,6 +80,9 @@ VALID_RETRIEVERS = [
     "mcp",
     "xquik",
     "openalex",
+    "ieee",
+    "springer",
+    "sciencedirect",
     "mock"
 ]
 

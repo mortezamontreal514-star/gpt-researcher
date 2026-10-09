@@ -38,6 +38,9 @@ def get_retriever(retriever: str):
         - semantic_scholar: Semantic Scholar academic search
         - pubmed_central: PubMed Central medical literature
         - openalex: OpenAlex scholarly works catalog
+        - ieee: IEEE Xplore articles
+        - springer: Springer Nature metadata
+        - sciencedirect: Elsevier ScienceDirect search
         - custom: Custom user-defined retriever
         - mcp: Model Context Protocol retriever
         - xquik: Xquik X/Twitter search
@@ -127,6 +130,18 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import OpenAlexSearch
 
             return OpenAlexSearch
+        case "ieee":
+            from gpt_researcher.retrievers import IEEESearch
+
+            return IEEESearch
+        case "springer":
+            from gpt_researcher.retrievers import SpringerSearch
+
+            return SpringerSearch
+        case "sciencedirect":
+            from gpt_researcher.retrievers import ScienceDirectSearch
+
+            return ScienceDirectSearch
         case "getxapi":
             from gpt_researcher.retrievers import GetXAPISearch
 

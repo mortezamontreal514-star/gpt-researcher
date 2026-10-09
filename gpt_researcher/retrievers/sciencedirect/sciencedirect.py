@@ -2,6 +2,7 @@
 
 import logging
 import os
+from re import search
 
 import requests
 
@@ -45,8 +46,22 @@ class ScienceDirectSearch:
                 href = f"https://doi.org/{entry['prism:doi']}"
             title = entry.get("dc:title")
             if title and href:
+                authors_node = entry.get("authors") or {}
+                authors = (authors_node.get("author") or []) if isinstance(authors_node, dict) else []
+                if isinstance(authors, dict):
+                    authors = [authors]
+                names = [(author.get("$") or author.get("ce:indexed-name")) for author in authors
+                         if isinstance(author, dict)]
+                if not names and entry.get("dc:creator"):
+                    names = [entry["dc:creator"]]
+                year_match = search(r"\b(?:19|20)\d{2}\b", str(entry.get("prism:coverDate") or ""))
                 results.append({"title": title, "href": href,
-                                "body": entry.get("prism:teaser") or ""})
+                                "body": entry.get("prism:teaser") or "",
+                                "abstract": entry.get("dc:description") or "",
+                                "authors": [name for name in names if name],
+                                "year": int(year_match.group()) if year_match else None,
+                                "doi": entry.get("prism:doi") or "",
+                                "source": "ScienceDirect"})
             if len(results) >= max_results:
                 break
         return results

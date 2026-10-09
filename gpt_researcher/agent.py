@@ -534,6 +534,7 @@ class GPTResearcher:
         query_domains: list[str] = None,
         aggregated_summary: bool = False,
         all_retrievers: bool = False,
+        max_results: int | None = None,
     ) -> list[Any] | str:
         """Perform a quick search without full research workflow.
 
@@ -544,15 +545,17 @@ class GPTResearcher:
             all_retrievers: If True, query every configured retriever concurrently and
                 merge the results (de-duplicated by URL). Defaults to False, which uses
                 only the primary retriever for backward compatibility.
+            max_results: Optional number of results requested from each retriever.
 
         Returns:
             List of search results or a synthesized summary string.
         """
         if all_retrievers and len(self.retrievers) > 1:
-            search_results = await self._search_all_retrievers(query, query_domains)
+            search_results = await self._search_all_retrievers(query, query_domains, max_results)
         else:
             search_results = await get_search_results(
-                query, self.retrievers[0], query_domains=query_domains, researcher=self
+                query, self.retrievers[0], query_domains=query_domains,
+                researcher=self, max_results=max_results,
             )
 
         if not aggregated_summary:
@@ -582,7 +585,8 @@ class GPTResearcher:
         return summary
 
     async def _search_all_retrievers(
-        self, query: str, query_domains: list[str] = None
+        self, query: str, query_domains: list[str] = None,
+        max_results: int | None = None,
     ) -> list[dict[str, Any]]:
         """Query every configured retriever concurrently and merge the results.
 
@@ -598,14 +602,15 @@ class GPTResearcher:
             A merged, de-duplicated list of search results.
         """
         tasks = [
-            get_search_results(query, retriever, query_domains=query_domains, researcher=self)
+            get_search_results(query, retriever, query_domains=query_domains,
+                               researcher=self, max_results=max_results)
             for retriever in self.retrievers
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         merged: list[dict[str, Any]] = []
         seen_urls: set[str] = set()
-        for result in results:
+        for retriever, result in zip(self.retrievers, results):
             if isinstance(result, Exception) or not result:
                 continue
             for item in result:
@@ -614,7 +619,9 @@ class GPTResearcher:
                     continue
                 if url:
                     seen_urls.add(url)
-                merged.append(item)
+                row = dict(item)
+                row.setdefault("source", retriever.__name__)
+                merged.append(row)
         return merged
 
     async def get_subtopics(self):

@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # Add the parent directory to sys.path to make sure we can import from server
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
@@ -66,6 +66,12 @@ class ChatRequest(BaseModel):
     
     report: str
     messages: List[Dict[str, Any]]
+
+
+class PaperListRequest(BaseModel):
+    topic: str = Field(min_length=1, max_length=1000)
+    decompose: bool = True
+    max_results_per_source: int = Field(default=10, ge=1, le=100)
 
 
 @asynccontextmanager
@@ -157,6 +163,31 @@ async def serve_frontend():
         content = f.read()
     
     return HTMLResponse(content=content)
+
+
+@app.post("/api/papers/search")
+async def search_paper_list(request: PaperListRequest):
+    """Return a paper list without scraping, report writing, or saving files."""
+    topic = request.topic.strip()
+    if not topic:
+        raise HTTPException(status_code=422, detail="Enter a research topic.")
+
+    from gpt_researcher import GPTResearcher
+    from gpt_researcher.skills.paper_list import find_papers
+
+    try:
+        researcher = GPTResearcher(query=topic, verbose=False)
+        return await find_papers(
+            researcher, topic, decompose=request.decompose,
+            max_results_per_source=request.max_results_per_source,
+        )
+    except Exception as exc:
+        # Provider exceptions may contain URLs with API keys. Keep the response safe.
+        logger.warning("Paper list search failed (%s)", type(exc).__name__)
+        raise HTTPException(
+            status_code=502,
+            detail="Paper search failed. Check the server configuration and API keys.",
+        ) from None
 
 
 @app.get("/.well-known/agent-discovery.json")

@@ -279,8 +279,25 @@
                 </div>
             </div>
 
+            <div class="paper-search-controls">
+                <label for="paperSearchLimit">Papers per source and query</label>
+                <input type="number" id="paperSearchLimit" min="1" max="100" value="10" class="form-control">
+                <label for="paperSearchDecompose">
+                    <input type="checkbox" id="paperSearchDecompose" checked>
+                    Break topic into search queries (uses the configured LLM)
+                </label>
+                <button type="button" id="findPapersButton" class="btn btn-secondary button-padding">Find Papers</button>
+                <small>Searches the configured sources and shows a list. No pages are scraped and no report is written.</small>
+            </div>
             <input type="submit" value="Begin Research" class="btn btn-primary button-padding" id="submitButton">
         </form>
+
+        <section class="margin-div paper-list-container" id="paperListSection" hidden aria-live="polite">
+            <h2>Paper List</h2>
+            <p id="paperListStatus" role="status"></p>
+            <div id="paperListQueries"></div>
+            <div id="paperListResults"></div>
+        </section>
 
         <!-- Add JSON button above Research Progress section -->
         <div class="margin-div" id="jsonButtonContainer" style="display: none; text-align: right; margin-bottom: 10px;">

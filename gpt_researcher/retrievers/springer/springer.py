@@ -3,7 +3,7 @@
 import logging
 import os
 from html import unescape
-from re import sub
+from re import search, sub
 
 import requests
 
@@ -43,12 +43,22 @@ class SpringerSearch:
             href = next((link.get("value") for link in links
                          if isinstance(link, dict) and link.get("format") == "html"
                          and link.get("platform") == "web" and link.get("value")), None)
-            if not href and record.get("doi"):
-                href = f"https://doi.org/{record['doi']}"
+            doi = str(record.get("doi") or record.get("identifier") or "").removeprefix("doi:")
+            if not href and doi:
+                href = f"https://doi.org/{doi}"
             title = record.get("title")
             if title and href:
                 abstract = record.get("abstract") or ""
+                creators = record.get("creators") or []
+                authors = [item.get("creator") or item.get("name") for item in creators
+                           if isinstance(item, dict)] if isinstance(creators, list) else []
+                year_match = search(r"\b(?:19|20)\d{2}\b", str(record.get("publicationDate") or record.get("coverDate") or ""))
                 results.append({"title": unescape(sub(r"<[^>]+>", " ", title)).strip(),
                                 "href": href,
-                                "body": unescape(sub(r"<[^>]+>", " ", abstract)).strip()})
+                                "body": unescape(sub(r"<[^>]+>", " ", abstract)).strip(),
+                                "abstract": unescape(sub(r"<[^>]+>", " ", abstract)).strip(),
+                                "authors": [name for name in authors if name],
+                                "year": int(year_match.group()) if year_match else None,
+                                "doi": doi,
+                                "source": "Springer Nature"})
         return results

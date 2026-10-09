@@ -3,7 +3,7 @@
 import logging
 import os
 from html import unescape
-from re import sub
+from re import search, sub
 
 import requests
 
@@ -49,7 +49,18 @@ class IEEESearch:
             title = record.get("title")
             if title and href:
                 abstract = record.get("abstract") or ""
+                authors = record.get("authors") or {}
+                if isinstance(authors, dict):
+                    authors = authors.get("authors") or []
+                authors = [item.get("full_name") or item.get("name") for item in authors
+                           if isinstance(item, dict)] if isinstance(authors, list) else []
+                year_match = search(r"\b(?:19|20)\d{2}\b", str(record.get("publication_year") or record.get("publication_date") or ""))
                 results.append({"title": unescape(sub(r"<[^>]+>", " ", title)).strip(),
                                 "href": href,
-                                "body": unescape(sub(r"<[^>]+>", " ", abstract)).strip()})
+                                "body": unescape(sub(r"<[^>]+>", " ", abstract)).strip(),
+                                "abstract": unescape(sub(r"<[^>]+>", " ", abstract)).strip(),
+                                "authors": [name for name in authors if name],
+                                "year": int(year_match.group()) if year_match else None,
+                                "doi": record.get("doi") or "",
+                                "source": "IEEE Xplore"})
         return results

@@ -1309,6 +1309,44 @@ footer a:hover {
     }
 }
 
+.paper-search-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 12px;
+}
+
+.paper-search-controls #paperSearchLimit {
+    width: 80px;
+}
+
+.paper-search-controls small {
+    flex-basis: 100%;
+}
+
+.paper-list-container[hidden] {
+    display: none;
+}
+
+.paper-list-container {
+    text-align: left;
+}
+
+.paper-list-item {
+    border-bottom: 1px solid #ddd;
+    padding: 14px 0;
+}
+
+.paper-list-item h3 {
+    font-size: 1.1rem;
+    margin: 0 0 6px;
+}
+
+.paper-list-item p {
+    margin: 4px 0;
+}
+
 @media (min-width: 769px) and (max-width: 1200px) {
     .history-panel {
         width: 280px;

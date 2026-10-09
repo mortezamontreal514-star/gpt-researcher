@@ -40,6 +40,7 @@ const GPTResearcher = (() => {
       startResearch();
       return false;
     });
+    document.getElementById('findPapersButton').addEventListener('click', findPapers);
 
     document
       .getElementById('copyToClipboard')
@@ -773,6 +774,88 @@ const GPTResearcher = (() => {
       } else {
         modernSpinner.classList.remove('spinning');
       }
+    }
+  };
+
+  const findPapers = async () => {
+    const topic = document.getElementById('task').value.trim();
+    if (!topic) {
+      document.getElementById('task').focus();
+      return;
+    }
+
+    const button = document.getElementById('findPapersButton');
+    const section = document.getElementById('paperListSection');
+    const status = document.getElementById('paperListStatus');
+    const queries = document.getElementById('paperListQueries');
+    const results = document.getElementById('paperListResults');
+    section.hidden = false;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    status.textContent = 'Searching paper sources...';
+    queries.replaceChildren();
+    results.replaceChildren();
+    button.disabled = true;
+
+    try {
+      const response = await fetch('/api/papers/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          decompose: document.getElementById('paperSearchDecompose').checked,
+          max_results_per_source: Number(document.getElementById('paperSearchLimit').value) || 10
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data.detail === 'string' ? data.detail : 'Paper search failed.');
+      }
+
+      status.textContent = `${data.total} papers found. No report was generated.`;
+      queries.textContent = `Search queries: ${data.queries.join(' · ')}`;
+      if (data.failed_queries.length) {
+        const warning = document.createElement('p');
+        warning.textContent = `Some queries failed: ${data.failed_queries.join(' · ')}`;
+        queries.appendChild(warning);
+      }
+      if (!data.papers.length) {
+        results.textContent = 'No papers returned. Check the configured sources and API keys.';
+      }
+
+      for (const paper of data.papers) {
+        const item = document.createElement('article');
+        item.className = 'paper-list-item';
+        const heading = document.createElement('h3');
+        const link = document.createElement('a');
+        const url = new URL(paper.url);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') continue;
+        link.href = url.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = paper.title;
+        heading.appendChild(link);
+        item.appendChild(heading);
+
+        const metadata = document.createElement('p');
+        metadata.textContent = [
+          (paper.authors || []).join(', '), paper.year,
+          paper.doi ? `DOI: ${paper.doi}` : '',
+          (paper.sources || []).join(', ')
+        ].filter(Boolean).join(' · ');
+        item.appendChild(metadata);
+
+        const description = paper.abstract || paper.preview;
+        if (description) {
+          const preview = document.createElement('p');
+          preview.textContent = description;
+          item.appendChild(preview);
+        }
+        results.appendChild(item);
+      }
+    } catch (error) {
+      status.textContent = error.message || 'Paper search failed.';
+    } finally {
+      button.disabled = false;
     }
   };
 

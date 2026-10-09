@@ -29,8 +29,8 @@ The existing `semantic_scholar` retriever can be included in the same list.
 This setting adds sources to GPT Researcher's normal research pipeline; it
 also powers the **Find Papers** button on the local page at `http://localhost:8000`.
 That button shows a deduplicated paper list without scraping pages or writing
-a report. Leave **Break topic into search queries** checked to use the existing
-LLM planning step, or uncheck it to search the topic directly without an LLM
+a report. Check **Break topic into search queries** to use the existing
+LLM planning step; the default searches the topic directly without an LLM
 call. Results appear only in the page and are not saved over existing reports
 or downloads. The existing Jev context filter remains controlled by
 `TYPESAFE_API_KEY` for the full research workflow.
